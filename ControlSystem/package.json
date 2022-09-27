@@ -1,0 +1,26 @@
+{
+  "name": "row-counter-control-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "repository": "https://github.com/electron/electron-quick-start",
+  "author": "Jean Carlos Quesada Cascante",
+  "devDependencies": {
+    "electron": "^20.1.3",
+    "electron-builder": "^23.3.3"
+  },
+  "dependencies": {
+    "gtts": "^0.2.1"
+  },
+  "build": {
+    "appId": "com.coopesanramon.RowCounter",
+    "productName": "Control de Fichas",
+    "win": {
+      "target": "nsis"
+    }
+  }
+}
