@@ -5,7 +5,13 @@
  * `contextIsolation` is turned on. Use the contextBridge API in `preload.js`
  * to expose Node.js functionality from the main process.
  */
-window.resizeTo(700, 250);
+window.resizeTo(700, 270);
+
+window.onload = async () => {
+  const settings = await window.methods.getSettings();
+  document.getElementById("cashierNumber").value = settings.cashier;
+  setLogo();
+};
 
 const nexNumber = async (reset) => {
   const settings = await window.methods.getSettings();

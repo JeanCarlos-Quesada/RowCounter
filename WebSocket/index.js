@@ -4,28 +4,27 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-rl.question("Use Default Port (Y/N): ", (useDefault) => {
-  if (useDefault.toUpperCase() == "Y") {
-    initWebSocket(null);
-    rl.close();
-  } else {
-    rl.question("Port Number: ", (port) => {
-      initWebSocket(port);
-      rl.close();
+rl.question("Ficha Inicial (Optional): ", (row) => {
+  rl.question("Cajero Inicial (Optional): ", (cashier) => {
+    rl.question("Use Default Port (Y/N): ", (useDefault) => {
+      if (useDefault.toUpperCase() == "Y") {
+        initWebSocket(null, row, cashier);
+        rl.close();
+      } else {
+        rl.question("Port Number: ", (port) => {
+          initWebSocket(port, row, cashier);
+          rl.close();
+        });
+      }
     });
-  }
+  });
 });
 
-const initWebSocket = (port) => {
+const initWebSocket = (port, row, cashier) => {
   //WebSocketImport
   const webSocketsServerPort = port ?? 8000;
   const webSocketServer = require("websocket").server;
   const http = require("http");
-
-  //os
-  var os = require("os");
-
-  var networkInterfaces = os.networkInterfaces();
 
   // init web socket server
   const server = http.createServer();
@@ -54,6 +53,10 @@ const initWebSocket = (port) => {
     }
   };
 
+  if (row || cashier) {
+    addToList({ number: row, cashier: cashier, reset: false });
+  }
+
   /**
    * It generates a random number between 1 and 65535, converts it to a string in base 16, and then
    * returns the first four characters of that string.
@@ -72,29 +75,55 @@ const initWebSocket = (port) => {
     var userID = getUniqueID();
     const connection = request.accept(null, request.origin);
     clients[userID] = connection;
-
     /* Sending the data to the client. */
     connection.on("message", (object) => {
       let data = JSON.parse(object.utf8Data);
+      let response;
+
       if (data.reset) {
         lastNumbers = [];
+
+        response = {
+          current: { number: 0, cashier: null },
+          lastNumbers,
+          isFirst: true,
+        };
+      } else {
+        addToList(data);
+
+        response = {
+          current: data,
+          lastNumbers,
+          isFirst: false,
+        };
       }
-
-      addToList(data);
-
-      let response = {
-        current: data,
-        lastNumbers,
-      };
 
       for (key in clients) {
         clients[key].sendUTF(JSON.stringify(response));
       }
     });
+
+    setTimeout(() => {
+      let response;
+      let tmp = lastNumbers[0];
+
+      if (tmp) {
+        response = {
+          current: tmp,
+          lastNumbers,
+          isFirst: true,
+        };
+      } else {
+        response = {
+          current: { number: 0, cashier: null },
+          lastNumbers,
+          isFirst: true,
+        };
+      }
+
+      connection.sendUTF(JSON.stringify(response));
+    }, 500);
   });
 
-  const firstNetwork = Object.keys(networkInterfaces)[0];
-  console.log(
-    `Web Socket running in ${networkInterfaces[firstNetwork][1].address}:${webSocketsServerPort}`
-  );
+  console.log(`Web Socket running`);
 };

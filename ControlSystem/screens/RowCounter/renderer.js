@@ -9,16 +9,44 @@ window.resizeTo(1200, 900);
 
 window.onload = async function () {
   showLoader();
-  const settings = await window.methods.getSettings();
-  window.methods
-    .readFileBase64(settings.videoPath)
-    .then((data) => {
-      document.getElementById("video").src = `data:video/mp4;base64,${data}`;
-      hiddenLoader();
-    })
-    .catch(() => {
-      message("No se logró cargar el video");
-      hiddenLoader();
-    });
-};
+  setLogo();
+  let i = 0;
+  let isFirst = true;
 
+  const nextVideo = async () => {
+    const settings = await window.methods.getSettings();
+
+    if (settings.videoPath) {
+      const videos = await window.methods.getAllVideos(settings.videoPath);
+
+      window.methods
+        .readFileBase64(`${settings.videoPath}\\${videos[i]}`)
+        .then((data) => {
+          let video = document.getElementById("video");
+          video.addEventListener("ended", nextVideo, false);
+          if (videos.length != 1 || isFirst) {
+            video.src = `data:video/mp4;base64,${data}`;
+            isFirst = false;
+            i += 1;
+            if (i == videos.length) {
+              i = 0;
+            }
+          } else {
+            video.currentTime = 0;
+          }
+
+          hiddenLoader();
+          video.play();
+        })
+        .catch((error) => {
+          message("No se logró cargar el video");
+          hiddenLoader();
+        });
+    } else {
+      message("No hay videos configurados");
+      hiddenLoader();
+    }
+  };
+
+  nextVideo();
+};

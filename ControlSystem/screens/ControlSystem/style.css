@@ -1,4 +1,17 @@
+.input-container {
+    margin-bottom: 1.5% !important;
+}
+
 .input-container>input {
-    font-size: 22px;
-    padding-top: 12px;
+    font-size: 30px;
+    padding-top: 14px !important;
+    padding-bottom: 2px !important;
+}
+
+.button-container>button {
+    font-size: 20px;
+}
+
+input::placeholder {
+    font-size: 20px;
 }

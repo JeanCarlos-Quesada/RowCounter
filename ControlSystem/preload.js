@@ -8,7 +8,6 @@
 const { contextBridge } = require("electron");
 const fs = require("fs");
 const path = require("path");
-const gTTS = require("gtts");
 
 var showRowTimer = null;
 
@@ -28,8 +27,11 @@ const getSettingsGlobal = async () => {
 };
 
 contextBridge.exposeInMainWorld("methods", {
-  readFileBase64: async (path) => {
-    return await fs.readFileSync(path, { encoding: "base64" });
+  readFileBase64: async (filePath, joinPath) => {
+    if (joinPath) {
+      filePath = path.join(__dirname, filePath);
+    }
+    return await fs.readFileSync(filePath, { encoding: "base64" });
   },
   writeSettingsFile: async (data) => {
     let savePath = path.join(__dirname, "../settings.json");
@@ -43,11 +45,6 @@ contextBridge.exposeInMainWorld("methods", {
     clearTimeout(showRowTimer);
     let video = document.getElementById("video");
     let speech = `${data.number} a caja ${data.cashier}`;
-    let filePath = path.join(
-      __dirname,
-      `../voice_${data.number}_a_caja_${data.cashier}.mp3`
-    );
-    let gtts = new gTTS(speech, "es");
 
     const hiddenRowCounter = () => {
       document.getElementById("left").classList.remove("show-left");
@@ -58,18 +55,6 @@ contextBridge.exposeInMainWorld("methods", {
       video.pause();
       document.getElementById("left").classList.add("show-left");
       document.getElementById("right").classList.add("hidden-right");
-      setTimeout(() => {
-        let audio = new Audio(filePath);
-        audio.play().then(() => {
-          fs.unlinkSync(
-            path.join(
-              __dirname,
-              `../voice_${data.number}_a_caja_${data.cashier}.mp3`
-            ),
-            () => {}
-          );
-        });
-      }, 500);
 
       showRowTimer = setTimeout(() => {
         video.play();
@@ -77,12 +62,24 @@ contextBridge.exposeInMainWorld("methods", {
       }, settings.rowTimer);
     };
 
-    gtts.save(filePath, (err, result) => {
-      if (err) {
-        throw new Error(err);
-      }
-      showRowCounter();
-    });
+    var msg = new SpeechSynthesisUtterance();
+    var voices = window.speechSynthesis
+      .getVoices()
+      .filter((x) => x.lang.includes("es-"));
+
+    msg.voice = voices[voices.length - 1]; // Note: some voices don't support altering params
+    msg.voiceURI = "native";
+    msg.volume = 1; // 0 to 1
+    msg.rate = 1; // 0.1 to 10
+    msg.pitch = 1; //0 to 2
+    msg.text = speech;
+    // msg.lang = voices[voices.length - 1].lang;
+
+    showRowCounter();
+    speechSynthesis.speak(msg);
+  },
+  getAllVideos: async (videosPath) => {
+    return await fs.readdirSync(videosPath).filter((x) => x.includes(".mp4"));
   },
 });
 

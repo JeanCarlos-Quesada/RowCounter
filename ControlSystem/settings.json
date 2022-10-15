@@ -1,1 +1,11 @@
-{"cashier":"1","webSocketPort":"8000","webSocketIP":"127.0.0.1","videoPath":"C:\\Users\\Jean Carlos\\Downloads\\CoopeSanRamón cumplió de 50 años de existir.mp4","rowTimer":10000}
+{
+  "cashier": "1",
+  "webSocketPort": "8000",
+  "webSocketIP": "127.0.0.1",
+  "videoPath": "",
+  "rowTimer": 10000,
+  "logo": {
+    "logoPath": "./global/assets/Logo.svg",
+    "join": true
+  }
+}
